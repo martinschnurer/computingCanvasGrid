@@ -1,19 +1,11 @@
 const canvas = document.getElementById('mainCanvas')
 const c = canvas.getContext('2d')
 
-c.strokeStyle = '#000'
-c.fillStyle = '#000'
-
-c.beginPath()
-c.moveTo(0,0)
-c.lineTo(10,10)
-// c.lineTo(50,50)
-// c.lineTo(-50,50)
-c.stroke()
-c.closePath()
-
 class Block {
     constructor(c, center, dimension) {
+        c.strokeStyle = '#000'
+        c.fillStyle = '#000'
+
         this.c = c
         this.center = center
         this.dimension = dimension
@@ -135,11 +127,6 @@ class Grid {
 }
 
 
-
-
-
-
-
 function renderGrid() {
     c.clearRect(0,0,500,500)
 
@@ -153,6 +140,5 @@ function renderGrid() {
         let a = new Grid(c, {x,y,width,height,cols,rows})
         a.render()
 }
-
 
 renderGrid()
