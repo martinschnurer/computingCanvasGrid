@@ -86,7 +86,7 @@ class Block {
             return true
         } else if (avg <= TH && this.state == true) {
             this.state = false
-            this.activeRectColor = [0,255,0,1]
+            this.activeRectColor = [255,0,0,1]
             return true
         }
 
