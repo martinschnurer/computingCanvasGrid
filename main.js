@@ -34,9 +34,20 @@ class Block {
         cc.closePath()
     }
     computeColor(c) {
-        let ul = this.upperLeft
-        c.getImageData(ul.x, ul.y, this.width, this.height)
+        let average_color = [0,0,0,0], // R,G,B,A
+            ul = this.upperLeft,
+            data = c.getImageData(ul.x + 1, ul.y + 1, this.width - 1, this.height - 1).data
+
+        for (let canal = 0; canal < 4; canal++) {
+            for (let i = canal; i < data.length; i+= 4) {
+                average_color[canal] += data[i]
+            }
+            average_color[canal] = average_color[canal] * 4 / data.length
+        }
+
+        console.log(average_color)
     }
+
 }
 
 class Grid {
@@ -116,6 +127,10 @@ class Grid {
             upperLeft = this.upperLeft,
             bottomRight = this.bottomRight
 
+        c.fillStyle = 'red'
+        c.fillRect(50,50,100,100)
+        c.stroke()
+
         c.beginPath()
         c.rect(upperLeft.x, upperLeft.y, this.width, this.height)
         this._renderAllBlocks()
@@ -140,5 +155,4 @@ function renderGrid() {
         let a = new Grid(c, {x,y,width,height,cols,rows})
         a.render()
 }
-
 renderGrid()
