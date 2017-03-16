@@ -1,10 +1,17 @@
-const canvas = document.getElementById('mainCanvas')
-const c = canvas.getContext('2d')
+const canvas1 = document.getElementById('canvasUnder')
+const canvas2 = document.getElementById('canvasOver')
+const c = canvas1.getContext('2d')
+const d = canvas2.getContext('2d')
+var TH = 30
 
 class Block {
     constructor(c, center, dimension) {
-        c.strokeStyle = '#000'
-        c.fillStyle = '#000'
+        this.state = false
+        this.activeRectColor = [0, 255, 0, 1]
+
+        d.strokeStyle = '#FFFFFF'
+        d.fillStyle = '#FFFFFF'
+
 
         this.c = c
         this.center = center
@@ -20,18 +27,31 @@ class Block {
         this.width = dimension.width
         this.height = dimension.height
     }
+    _decreaseActiveRect() {
+        for (let i = 0; i < this.activeRectColor.length; i++) {
+            this.activeRectColor[i] *= 0.95
+        }
+    }
     render() {
+        let r = this.activeRectColor[0],
+        g = this.activeRectColor[1],
+        b = this.activeRectColor[2],
+        a = this.activeRectColor[3]
+
+        this._decreaseActiveRect()
         let cc = this.c
-        cc.beginPath()
-        cc.rect(this.upperLeft.x, this.upperLeft.y, this.width, this.height)
-        cc.stroke()
-        cc.closePath()
+        d.beginPath()
+        d.fillStyle = `rgba(${r},${g},${b},${a})`
+        d.fillRect(this.upperLeft.x, this.upperLeft.y, this.width, this.height)
+        d.rect(this.upperLeft.x, this.upperLeft.y, this.width, this.height)
+        d.stroke()
+        d.closePath()
     }
     renderWithoutStroke() {
         let cc = this.c
-        cc.beginPath()
-        cc.rect(this.upperLeft.x, this.upperLeft.y, this.width, this.height)
-        cc.closePath()
+        d.beginPath()
+        d.rect(this.upperLeft.x, this.upperLeft.y, this.width, this.height)
+        d.closePath()
     }
     computeColor(c) {
         let average_color = [0,0,0,0], // R,G,B,A
@@ -44,14 +64,40 @@ class Block {
             }
             average_color[canal] = average_color[canal] * 4 / data.length
         }
-
-        console.log(average_color)
+        return average_color
     }
 
+    _computeAverage(arr) {
+        return (arr[0] + arr[1] + arr[2]) / 3
+    }
+
+    hasChanged() {
+        let col_arr = this.computeColor(this.c)
+        let avg = this._computeAverage(col_arr)
+
+        if (avg > TH && this.state == false ) {
+            this.state = true
+            this.activeRectColor = [0,255,0,1]
+            return true
+        } else if (avg <= TH && this.state == true) {
+            this.state = false
+            this.activeRectColor = [0,255,0,1]
+            return true
+        }
+
+        return false
+    }
 }
+
+
+
+
+
+
 
 class Grid {
     constructor(c, start={x: 60, y: 80,height: 50, width: 50, cols: 5, rows: 3}) {
+        c.strokeStyle = '#FFFFFF'
         this.c = c
         this.cols = start.cols
         this.rows = start.rows
@@ -66,11 +112,11 @@ class Grid {
     }
 
     _computeGridColors() {
-        console.time("trvanie")
+        // console.time("trvanie")
         for (let i = 0, len = this.blocks.length; i < len; i++) {
             this.blocks[i].computeColor(this.c)
         }
-        console.timeEnd("trvanie")
+        // console.timeEnd("trvanie")
     }
 
     _renderAllBlocks() {
@@ -122,37 +168,93 @@ class Grid {
         this.rows = a
     }
 
+    checkForChange() {
+        let bool
+        for (let i = 0; i < this.blocks.length; i++) {
+            bool = this.blocks[i].hasChanged()
+
+            if (bool) {
+                console.log(`SOMETHING HAS CHANGED IN BLOCK ${i}`)
+            }
+        }
+    }
+
     render() {
         let c = this.c,
             upperLeft = this.upperLeft,
             bottomRight = this.bottomRight
 
-        c.fillStyle = 'red'
-        c.fillRect(50,50,100,100)
-        c.stroke()
+        d.beginPath()
+        d.globalAlpha = 0
+        d.clearRect(0,0,10000,10000)
+        d.globalAlpha = 1
+        d.closePath()
 
-        c.beginPath()
-        c.rect(upperLeft.x, upperLeft.y, this.width, this.height)
+
+        d.beginPath()
+        d.rect(upperLeft.x, upperLeft.y, this.width, this.height)
         this._renderAllBlocks()
-        c.stroke()
         this._computeGridColors()
-        c.closePath()
-
+        d.stroke()
+        d.closePath()
     }
 }
 
 
-function renderGrid() {
-    c.clearRect(0,0,500,500)
-
-    let x = document.querySelector('input[name="x"]').value,
-        y = document.querySelector('input[name="y"]').value,
-        width = document.querySelector('input[name="width"]').value,
-        height = document.querySelector('input[name="height"]').value,
-        cols = document.querySelector('input[name="cols"]').value,
-        rows = document.querySelector('input[name="rows"]').value
-
-        let a = new Grid(c, {x,y,width,height,cols,rows})
-        a.render()
+const html_elements = {
+    x: document.querySelector('input[name="x"]'),
+    y: document.querySelector('input[name="y"]'),
+    width: document.querySelector('input[name="width"]'),
+    height: document.querySelector('input[name="height"]'),
+    cols: document.querySelector('input[name="cols"]'),
+    rows: document.querySelector('input[name="rows"]'),
+    th: document.querySelector('input[name="th"]')
 }
-renderGrid()
+
+
+document.addEventListener('DOMContentLoaded', function(){
+    var v = document.querySelector('#video');
+    var context = c
+
+    canvas1.height = v.videoHeight
+    canvas1.width = v.videoWidth
+    canvas2.height = v.videoHeight
+    canvas2.width = v.videoWidth
+    let cw = v.videoWidth
+    let ch = v.videoHeight
+
+    v.addEventListener('play', function(){
+        draw(this, context, cw, ch);
+    }, false);
+
+}, false);
+
+
+
+function draw(v,c,w,h) {
+    if (v.paused || v.ended) return false;
+    c.drawImage(v, 0, 0, w, h);
+    MainGrid.render()
+    MainGrid.checkForChange()
+    setTimeout(function() {
+        draw(v, c ,w ,h)
+    }, 20);
+}
+
+
+
+var MainGrid = new Grid(c)
+
+function renderGrid() {
+
+    let x = html_elements.x.value,
+        y = html_elements.y.value,
+        width = html_elements.width.value,
+        height = html_elements.height.value,
+        cols = html_elements.cols.value,
+        rows = html_elements.rows.value,
+        TH = html_elements.th.value
+
+        MainGrid = new Grid(c, {x,y,width,height,cols,rows})
+        MainGrid.render()
+}
