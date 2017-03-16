@@ -4,6 +4,11 @@ const c = canvas1.getContext('2d')
 const d = canvas2.getContext('2d')
 var TH = 28
 
+
+function playVideo() {
+    video.play()
+}
+
 class Block {
     constructor(c, center, dimension) {
         this.state = false
