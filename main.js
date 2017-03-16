@@ -2,7 +2,7 @@ const canvas1 = document.getElementById('canvasUnder')
 const canvas2 = document.getElementById('canvasOver')
 const c = canvas1.getContext('2d')
 const d = canvas2.getContext('2d')
-var TH = 30
+var TH = 28
 
 class Block {
     constructor(c, center, dimension) {
@@ -96,7 +96,7 @@ class Block {
 
 
 class Grid {
-    constructor(c, start={x: 60, y: 80,height: 50, width: 50, cols: 5, rows: 3}) {
+    constructor(c, start={x: 437, y: 338,height: 406, width: 770, cols: 8, rows: 6}) {
         c.strokeStyle = '#FFFFFF'
         this.c = c
         this.cols = start.cols
